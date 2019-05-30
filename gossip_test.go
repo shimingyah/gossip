@@ -511,7 +511,7 @@ func TestGossip_Join(t *testing.T) {
 	require.NoError(t, err)
 	defer m2.Shutdown()
 
-	num, err := m2.Join([]string{m1.config.BindAddr})
+	num, err := m2.Join([]string{fmt.Sprintf("%s:%d", m1.config.BindAddr, m1.config.BindPort)})
 	if num != 1 {
 		t.Fatalf("unexpected 1: %d", num)
 	}
@@ -557,7 +557,7 @@ func TestGossip_Join_Cancel(t *testing.T) {
 	require.NoError(t, err)
 	defer m2.Shutdown()
 
-	num, err := m2.Join([]string{m1.config.BindAddr})
+	num, err := m2.Join([]string{fmt.Sprintf("%s:%d", m1.config.BindAddr, m1.config.BindPort)})
 	if num != 0 {
 		t.Fatalf("unexpected 0: %d", num)
 	}
@@ -696,7 +696,7 @@ func TestGossip_Leave(t *testing.T) {
 	require.NoError(t, err)
 	defer m2.Shutdown()
 
-	num, err := m2.Join([]string{m1.config.BindAddr})
+	num, err := m2.Join([]string{fmt.Sprintf("%s:%d", m1.config.BindAddr, m1.config.BindPort)})
 	if num != 1 {
 		t.Fatalf("unexpected 1: %d", num)
 	}
@@ -751,7 +751,7 @@ func TestGossip_JoinShutdown(t *testing.T) {
 	require.NoError(t, err)
 	defer m2.Shutdown()
 
-	num, err := m2.Join([]string{m1.config.BindAddr})
+	num, err := m2.Join([]string{fmt.Sprintf("%s:%d", m1.config.BindAddr, m1.config.BindPort)})
 	if num != 1 {
 		t.Fatalf("unexpected 1: %d", num)
 	}
@@ -788,7 +788,7 @@ func TestGossip_delegateMeta(t *testing.T) {
 	require.NoError(t, err)
 	defer m2.Shutdown()
 
-	_, err = m1.Join([]string{c2.BindAddr})
+	_, err = m1.Join([]string{fmt.Sprintf("%s:%d", c2.BindAddr, c2.BindPort)})
 	require.NoError(t, err)
 
 	yield()
@@ -851,7 +851,7 @@ func TestGossip_delegateMeta_Update(t *testing.T) {
 	require.NoError(t, err)
 	defer m2.Shutdown()
 
-	_, err = m1.Join([]string{c2.BindAddr})
+	_, err = m1.Join([]string{fmt.Sprintf("%s:%d", c2.BindAddr, c2.BindPort)})
 	require.NoError(t, err)
 
 	yield()
@@ -944,7 +944,7 @@ func TestGossip_UserData(t *testing.T) {
 	require.NoError(t, err)
 	defer m2.Shutdown()
 
-	num, err := m2.Join([]string{m1.config.BindAddr})
+	num, err := m2.Join([]string{fmt.Sprintf("%s:%d", m1.config.BindAddr, m1.config.BindPort)})
 	if num != 1 {
 		t.Fatalf("unexpected 1: %d", num)
 	}
@@ -998,7 +998,7 @@ func TestGossip_SendTo(t *testing.T) {
 	require.NoError(t, err)
 	defer m2.Shutdown()
 
-	num, err := m2.Join([]string{m1.config.BindAddr})
+	num, err := m2.Join([]string{fmt.Sprintf("%s:%d", m1.config.BindAddr, m1.config.BindPort)})
 	require.NoError(t, err)
 	require.Equal(t, 1, num)
 
@@ -1008,7 +1008,7 @@ func TestGossip_SendTo(t *testing.T) {
 	// Try to do a direct send
 	m2Addr := &net.UDPAddr{
 		IP:   addr2,
-		Port: bindPort,
+		Port: c2.BindPort,
 	}
 	if err := m1.SendTo(m2Addr, []byte("ping")); err != nil {
 		t.Fatalf("err: %v", err)
@@ -1016,7 +1016,7 @@ func TestGossip_SendTo(t *testing.T) {
 
 	m1Addr := &net.UDPAddr{
 		IP:   net.ParseIP(m1.config.BindAddr),
-		Port: bindPort,
+		Port: c1.BindPort,
 	}
 	if err := m2.SendTo(m1Addr, []byte("pong")); err != nil {
 		t.Fatalf("err: %v", err)
@@ -1066,11 +1066,10 @@ func TestGossip_Join_DeadNode(t *testing.T) {
 	require.NoError(t, err)
 	defer m1.Shutdown()
 
-	bindPort := m1.config.BindPort
-
 	// Create a second "node", which is just a TCP listener that
 	// does not ever respond. This is to test our deadliens
 	addr2 := getBindAddr()
+	bindPort++
 	list, err := net.Listen("tcp", fmt.Sprintf("%s:%d", addr2.String(), bindPort))
 	if err != nil {
 		t.Fatalf("err: %v", err)
@@ -1083,7 +1082,7 @@ func TestGossip_Join_DeadNode(t *testing.T) {
 	})
 	defer timer.Stop()
 
-	num, err := m1.Join([]string{addr2.String()})
+	num, err := m1.Join([]string{fmt.Sprintf("%s:%d", addr2.String(), bindPort)})
 	if num != 0 {
 		t.Fatalf("unexpected 0: %d", num)
 	}
@@ -1112,7 +1111,7 @@ func TestGossip_Join_Protocol_Compatibility(t *testing.T) {
 		require.NoError(t, err)
 		defer m2.Shutdown()
 
-		num, err := m2.Join([]string{m1.config.BindAddr})
+		num, err := m2.Join([]string{fmt.Sprintf("%s:%d", m1.config.BindAddr, m1.config.BindPort)})
 		require.NoError(t, err)
 		require.Equal(t, 1, num)
 
@@ -1373,7 +1372,7 @@ func TestGossip_PingDelegate(t *testing.T) {
 	require.NoError(t, err)
 	defer m2.Shutdown()
 
-	num, err := m2.Join([]string{m1.config.BindAddr})
+	num, err := m2.Join([]string{fmt.Sprintf("%s:%d", m1.config.BindAddr, m1.config.BindPort)})
 	require.NoError(t, err)
 	require.Equal(t, 1, num)
 
