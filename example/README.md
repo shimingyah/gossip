@@ -63,7 +63,7 @@ curl "http://127.0.0.1:8082/get?key=foo"
 third del key on http server 8083, del k-v successful.
 
 ```
-curl "http://127.0.0.1:8082/del?key=foo"
+curl "http://127.0.0.1:8083/del?key=foo"
 ```
 fourthly has key on http server 8082, it will return not found.
 
